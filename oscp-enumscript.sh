@@ -46,25 +46,17 @@ fi
 # specify directory to put the outputfiles in
 dir="enum"
 
+
 # run nmap, and send the results to 3 different output files
 printf "\n\n----- Nmap starting -----\n"
 mkdir "$dir"
-touch "$dir/nmap$target"
-touch "$dir/nmap-grep$target"
 printf "\n~ Running Nmap without scripts ~ \n"
-#nmap -p- -sV -oN "$dir/nmap-$target" -oX "$dir/nmap-$target-xml" "$target"
+nmap -p- -sV -oN "$dir/nmap-$target" -oX "$dir/nmap-$target-xml" "$target"
 printf "\n~ Running Nmap with scripts ~ \n"
-#nmap -p- -sC -sV -oN "$dir/nmap-$target-defaultscripts" "$target"
+nmap -p- -sC -sV -oN "$dir/nmap-$target-defaultscripts" "$target"
 printf "\n----- Nmap done -----\n"
 
-# identify http ports on the target system
-httpports=""
-nmapfile="$dir/nmap-$target"
-#cat "$nmapfile" | grep "open"
-####################################TODO dit afmaken
-
-
-# verify if dirb, nikto and curl are installed
+# verify if dirb and nikto are installed
 #Check if curl is installed
 if [ "$(dpkg -l | awk '/curl/ {print }'|wc -l)" = 0 ]; then
         printf "\ncurl is not installed. Install on debian-like systems with:"
@@ -84,59 +76,74 @@ if [ "$(dpkg -l | awk '/dirb/ {print }'|wc -l)" = 0 ]; then
         exit
 fi
 
+printf "\n\n----- Starting Web Enumeration -----\n\n"
+
+# identify http ports on the target system
+nmapfile="$dir/nmap-$target"
+httplist=$(cat "$nmapfile" | grep "open" | grep "http" | grep -v "ssl" | cut -d " " -f 1 | cut -d "/" -f 1)
+httpslist=$(cat "$nmapfile" | grep "open" | grep "http" | grep "ssl" | cut -d " " -f 1 | cut -d "/" -f 1)
+
+if [ "$httplist" = "" ]; then
+	printf "\n~~ Couldn't identify any http ports\n"
+else
+	printf "\n~~ Identified these http ports on the target:\n"
+	printf "$httplist\n"
+fi
+if [ "$httpslist" = "" ]; then
+	printf "\n~~ Couldn't identify any https ports\n"
+else
+	printf "\n~~ Identified these https ports on the target:\n"
+	printf "$httpslist\n"
+fi
+
+# if robots.txt exists: download and save it with curl.
+for p in $httplist; do
+	curl http://"$target"/robots.txt > $dir/"$target"-"$p"-robots.txt 2>/dev/null
+	if [ -s $dir/"$p"-robots.txt ]; then
+		rm $dir/"$target"-"$p"-robots.txt
+		printf "\n~~ no robots.txt found for port $p\n"
+	else
+		printf "\n~~ Saved robots.txt for port $p\n"
+	fi
+done
+for p in $httpslist; do
+	curl https://"$target"/robots.txt > $dir/"$target"-"$p"-robots.txt 2>/dev/null
+	if [ -s $dir/"$p"-robots.txt ]; then
+		rm $dir/"$target"-"$p"-robots.txt
+		printf "\n~~ no robots.txt found for port $p\n"
+	else
+		printf "\n~~ Saved robots.txt for port $p\n"
+	fi
+done
 
 
-# if robots.txt exists: download it
-
-
-
-# run nikto
-
-
+# run nikto for each webserver
+for p in $httplist; do
+	printf "\n\n~~ Running nikto for port $p ...\n"
+	nikto -host http://"$target":"$p"/ > $dir/"$target"-"$p"-nikto.txt
+	printf "~~  > done; results saved."
+done
+for p in $httpslist; do
+	printf "\n\n~~ Running nikto for port $p ...\n"
+	nikto -host https://"$target":"$p"/ > $dir/"$target"-"$p"-nikto.txt
+	printf "~~  > done; results saved."
+done
 
 # run dirb non-recursive
-
-
+for p in $httplist; do
+	printf "\n\n~~ Running dirb non-recursive for port $p ...\n"
+#	dirb http://"$target":"$p" -r -o $dir/"$target"-"$p"-dirb.txt
+	printf "~~  > done; results saved."
+done
+for p in $httpslist; do
+	printf "\n\n~~ Running dirb non-recursive for port $p ...\n"
+	dirb https://"$target":"$p" -r -o $dir/"$target"-"$p"-dirb.txt
+	printf "~~  > done; results saved."
+done
 
 # run dirb recursive
+#(maybe add later?)
 
-
-
-
-
-#verification; delete this later
-printf "\n"
-printf "\ndomain: "
-
-if [ "$domain" = "" ]; then
-	printf "-"
-else
-	printf "$domain"
-fi
-
-
-printf "\nipv4 address: ";
-if [ "$ipv4" = "" ]; then
-	printf "-"
-else
-	printf "$ipv4"
-fi
-
-printf "\ndirname: "
-if [ "$dir" = "" ]; then
-	printf "-"
-else
-	printf "$dir"
-fi
-
-printf "\ntarget: "
-if [ "$target" = "" ]; then
-	printf "-"
-else
-	printf "$target"
-fi
 
 # End the script
-
 printf "\n\n----- Finished!  -----\n"
-
