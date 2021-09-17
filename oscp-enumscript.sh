@@ -51,9 +51,9 @@ dir="enum"
 printf "\n\n----- Nmap starting -----\n"
 mkdir "$dir"
 printf "\n~ Running Nmap without scripts ~ \n"
-nmap -p- -sV -oN "$dir/nmap-$target" -oX "$dir/nmap-$target-xml" "$target"
+nmap -p- -sV -oN "$dir"/"$target"-nmap -oX "$dir"/"$target"-nmap-xml "$target"
 printf "\n~ Running Nmap with scripts ~ \n"
-nmap -p- -sC -sV -oN "$dir/nmap-$target-defaultscripts" "$target"
+nmap -p- -sC -sV -oN "$dir"/"$target"-nmap-defaultscripts "$target"
 printf "\n----- Nmap done -----\n"
 
 # verify if dirb and nikto are installed
@@ -132,7 +132,7 @@ done
 # run dirb non-recursive
 for p in $httplist; do
 	printf "\n\n~~ Running dirb non-recursive for port $p ...\n"
-#	dirb http://"$target":"$p" -r -o $dir/"$target"-"$p"-dirb.txt
+	dirb http://"$target":"$p" -r -o $dir/"$target"-"$p"-dirb.txt
 	printf "~~  > done; results saved."
 done
 for p in $httpslist; do
@@ -143,7 +143,6 @@ done
 
 # run dirb recursive
 #(maybe add later?)
-
 
 # End the script
 printf "\n\n----- Finished!  -----\n"
