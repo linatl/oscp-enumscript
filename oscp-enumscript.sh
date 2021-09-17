@@ -79,7 +79,7 @@ fi
 printf "\n\n----- Starting Web Enumeration -----\n\n"
 
 # identify http ports on the target system
-nmapfile="$dir/nmap-$target"
+nmapfile="$dir/$target"-nmap
 httplist=$(cat "$nmapfile" | grep "open" | grep "http" | grep -v "ssl" | cut -d " " -f 1 | cut -d "/" -f 1)
 httpslist=$(cat "$nmapfile" | grep "open" | grep "http" | grep "ssl" | cut -d " " -f 1 | cut -d "/" -f 1)
 
@@ -97,24 +97,24 @@ else
 fi
 
 # if robots.txt exists: download and save it with curl.
-for p in $httplist; do
-	curl http://"$target"/robots.txt > $dir/"$target"-"$p"-robots.txt 2>/dev/null
-	if [ -s $dir/"$p"-robots.txt ]; then
-		rm $dir/"$target"-"$p"-robots.txt
-		printf "\n~~ no robots.txt found for port $p\n"
-	else
-		printf "\n~~ Saved robots.txt for port $p\n"
-	fi
-done
-for p in $httpslist; do
-	curl https://"$target"/robots.txt > $dir/"$target"-"$p"-robots.txt 2>/dev/null
-	if [ -s $dir/"$p"-robots.txt ]; then
-		rm $dir/"$target"-"$p"-robots.txt
-		printf "\n~~ no robots.txt found for port $p\n"
-	else
-		printf "\n~~ Saved robots.txt for port $p\n"
-	fi
-done
+#for p in $httplist; do
+#	curl http://"$target"/robots.txt > $dir/"$target"-"$p"-robots.txt 2>/dev/null
+#	if [ -s $dir/"$p"-robots.txt ]; then
+#		rm $dir/"$target"-"$p"-robots.txt
+#		printf "\n~~ no robots.txt found for port $p\n"
+#	else
+#		printf "\n~~ Saved robots.txt for port $p\n"
+#	fi
+#done
+#for p in $httpslist; do
+#	curl https://"$target"/robots.txt > $dir/"$target"-"$p"-robots.txt 2>/dev/null
+#	if [ -s $dir/"$p"-robots.txt ]; then
+#		rm $dir/"$target"-"$p"-robots.txt
+#		printf "\n~~ no robots.txt found for port $p\n"
+#	else
+#		printf "\n~~ Saved robots.txt for port $p\n"
+#	fi
+#done
 
 
 # run nikto for each webserver
