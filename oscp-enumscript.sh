@@ -80,8 +80,8 @@ printf "\n\n----- Starting Web Enumeration -----\n\n"
 
 # identify http ports on the target system
 nmapfile="$dir/$target"-nmap
-httplist=$(cat "$nmapfile" | grep "open" | grep "http" | grep -v "ssl" | cut -d " " -f 1 | cut -d "/" -f 1)
-httpslist=$(cat "$nmapfile" | grep "open" | grep "http" | grep "ssl" | cut -d " " -f 1 | cut -d "/" -f 1)
+httplist=$(cat "$nmapfile" | grep "open" | grep "http" | grep -v "ssl " | cut -d " " -f 1 | cut -d "/" -f 1)
+httpslist=$(cat "$nmapfile" | grep "open" | grep "http" | grep "ssl " | cut -d " " -f 1 | cut -d "/" -f 1)
 
 if [ "$httplist" = "" ]; then
 	printf "\n~~ Couldn't identify any http ports\n"
@@ -95,27 +95,6 @@ else
 	printf "\n~~ Identified these https ports on the target:\n"
 	printf "$httpslist\n"
 fi
-
-# if robots.txt exists: download and save it with curl.
-#for p in $httplist; do
-#	curl http://"$target"/robots.txt > $dir/"$target"-"$p"-robots.txt 2>/dev/null
-#	if [ -s $dir/"$p"-robots.txt ]; then
-#		rm $dir/"$target"-"$p"-robots.txt
-#		printf "\n~~ no robots.txt found for port $p\n"
-#	else
-#		printf "\n~~ Saved robots.txt for port $p\n"
-#	fi
-#done
-#for p in $httpslist; do
-#	curl https://"$target"/robots.txt > $dir/"$target"-"$p"-robots.txt 2>/dev/null
-#	if [ -s $dir/"$p"-robots.txt ]; then
-#		rm $dir/"$target"-"$p"-robots.txt
-#		printf "\n~~ no robots.txt found for port $p\n"
-#	else
-#		printf "\n~~ Saved robots.txt for port $p\n"
-#	fi
-#done
-
 
 # run nikto for each webserver
 for p in $httplist; do
@@ -142,7 +121,16 @@ for p in $httpslist; do
 done
 
 # run dirb recursive
-#(maybe add later?)
+for p in $httplist; do
+	printf "\n\n~~ Running dirb recursive for port $p ...\n"
+	dirb http://"$target":"$p" -o $dir/"$target"-"$p"-dirb-recursive.txt
+	printf "~~  > done; results saved."
+done
+for p in $httpslist; do
+	printf "\n\n~~ Running dirb recursive for port $p ...\n"
+	dirb https://"$target":"$p" -o $dir/"$target"-"$p"-dirb-recursive.txt
+	printf "~~  > done; results saved."
+done
 
 # End the script
 printf "\n\n----- Finished!  -----\n"
