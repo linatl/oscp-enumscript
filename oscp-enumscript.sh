@@ -125,15 +125,15 @@ done
 # run dirb recursive
 for p in $httplist; do
 	printf "\n\n~~ Running dirb recursive for port $p ...\n"
-	printf "\n~~ Using wordlist /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt with about 140k entries, so this may take a while ...\n"
-	dirb http://"$target":"$p" -o $dir/"$target"-"$p"-dirb-recursive.txt
+	printf "\n~~ Using wordlist /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt with about 220k entries, so this may take a while ...\n"
+	dirb http://"$target":"$p" /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -o $dir/"$target"-"$p"-dirb-recursive.txt
 	printf "\n~~  > done; results saved."
 
 done
 for p in $httpslist; do
 	printf "\n\n~~ Running dirb recursive for port $p ...\n"
-	printf "\n~~ Using wordlist /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt with about 140k entries, so this may take a while ...\n"
-	dirb https://"$target":"$p" -o $dir/"$target"-"$p"-dirb-recursive.txt
+	printf "\n~~ Using wordlist /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt with about 220k entries, so this may take a while ...\n"
+	dirb https://"$target":"$p" /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -o $dir/"$target"-"$p"-dirb-recursive.txt
 	printf "~~  > done; results saved."
 done
 
