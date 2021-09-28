@@ -46,23 +46,16 @@ fi
 # specify directory to put the outputfiles in
 dir="enum"
 
-
 # run nmap, and send the results to 3 different output files
 printf "\n\n----- Nmap starting -----\n"
 mkdir "$dir"
 printf "\n~ Running Nmap without scripts ~ \n"
-nmap -p- -sV -oN "$dir"/"$target"-nmap -oX "$dir"/"$target"-nmap-xml "$target"
-printf "\n~ Running Nmap with scripts ~ \n"
-nmap -p- -sC -sV -oN "$dir"/"$target"-nmap-defaultscripts "$target"
+nmap -p- -Pn -sV -oN "$dir"/"$target"-nmap -oX "$dir"/"$target"-nmap-xml "$target"
+printf "\n~ Running Nmap again with scripts ~ \n"
+nmap -p- -Pn -sC -sV -oN "$dir"/"$target"-nmap-defaultscripts "$target"
 printf "\n----- Nmap done -----\n"
 
-# verify if dirb and nikto are installed
-#Check if curl is installed
-if [ "$(dpkg -l | awk '/curl/ {print }'|wc -l)" = 0 ]; then
-        printf "\ncurl is not installed. Install on debian-like systems with:"
-        printf "\n\$ sudo apt install curl\n"
-        exit
-fi
+# verify if dirb and nikto and seclists are installed
 #Check if nikto is installed
 if [ "$(dpkg -l | awk '/nikto/ {print }'|wc -l)" = 0 ]; then
         printf "\nnikto is not installed. Install on debian-like systems with:"
@@ -75,13 +68,20 @@ if [ "$(dpkg -l | awk '/dirb/ {print }'|wc -l)" = 0 ]; then
         printf "\n\$ sudo apt install dirb\n"
         exit
 fi
+#Check if seclists is installed
+if [ "$(dpkg -l | awk '/seclists/ {print }'|wc -l)" = 0 ]; then
+        printf "\nseclists is not installed. Install on debian-like systems with:"
+        printf "\n\$ sudo apt install seclists"
+        printf "\nIf not, only the last part of enumeration wont work: finding directories on webpages using burp"
+	sleep 3s
+fi
 
 printf "\n\n----- Starting Web Enumeration -----\n\n"
 
 # identify http ports on the target system
 nmapfile="$dir/$target"-nmap
-httplist=$(cat "$nmapfile" | grep "open" | grep "http" | grep -v "ssl " | cut -d " " -f 1 | cut -d "/" -f 1)
-httpslist=$(cat "$nmapfile" | grep "open" | grep "http" | grep "ssl " | cut -d " " -f 1 | cut -d "/" -f 1)
+httplist=$(cat "$nmapfile" | grep "open" | grep "http" | grep -v "ssl" | grep -v "ncacn" | cut -d " " -f 1 | cut -d "/" -f 1)
+httpslist=$(cat "$nmapfile" | grep "open" | grep "http" | grep "ssl" | cut -d " " -f 1 | cut -d "/" -f 1)
 
 if [ "$httplist" = "" ]; then
 	printf "\n~~ Couldn't identify any http ports\n"
@@ -110,12 +110,14 @@ done
 
 # run dirb non-recursive
 for p in $httplist; do
-	printf "\n\n~~ Running dirb non-recursive for port $p ...\n"
+	printf "\n\n~~ Running dirb non-recursive for port $p .\n"
+	printf "\n~~ Using the default wordlist for dirb, with only about 4600 entries ...\n"
 	dirb http://"$target":"$p" -r -o $dir/"$target"-"$p"-dirb.txt
 	printf "~~  > done; results saved."
 done
 for p in $httpslist; do
 	printf "\n\n~~ Running dirb non-recursive for port $p ...\n"
+	printf "\n~~ Using the default wordlist for dirb, with only about 4600 entries ...\n"
 	dirb https://"$target":"$p" -r -o $dir/"$target"-"$p"-dirb.txt
 	printf "~~  > done; results saved."
 done
@@ -123,11 +125,14 @@ done
 # run dirb recursive
 for p in $httplist; do
 	printf "\n\n~~ Running dirb recursive for port $p ...\n"
+	printf "\n~~ Using wordlist /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt with about 140k entries, so this may take a while ...\n"
 	dirb http://"$target":"$p" -o $dir/"$target"-"$p"-dirb-recursive.txt
-	printf "~~  > done; results saved."
+	printf "\n~~  > done; results saved."
+
 done
 for p in $httpslist; do
 	printf "\n\n~~ Running dirb recursive for port $p ...\n"
+	printf "\n~~ Using wordlist /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt with about 140k entries, so this may take a while ...\n"
 	dirb https://"$target":"$p" -o $dir/"$target"-"$p"-dirb-recursive.txt
 	printf "~~  > done; results saved."
 done
