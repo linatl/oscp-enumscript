@@ -6,16 +6,16 @@
 
 nmap --> for port scanning and scripting engine
 
-dirb --> for web directory busting
+gobuster and ffuf --> for web directory busting
 
-curl --> for downloads
+seclists --> for wordlists
 
 nikto --> for web enumeration
 
 
-Install with (debian-based systems):
+Install tools with (on kali system):
 ```
-$ sudo apt install nmap curl nikto dirb 
+$ sudo apt install nmap nikto seclists gobuster ffuf 
 ```
 
 
