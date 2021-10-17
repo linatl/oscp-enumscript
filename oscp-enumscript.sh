@@ -13,11 +13,44 @@ fi
 
 printf "\n----- Starting -----\n"
 
+# verify if necessary tools are installed
+declare -i abortscript
+abortscript=0
+
 #Check if nmap is installed
 if [ "$(dpkg -l | awk '/nmap/ {print }'|wc -l)" = 0 ]; then
-        printf "\nnmap is not installed. Install on debian-like systems with:"
+        printf "\nnmap is not installed. Install on kali with:"
         printf "\n\$ sudo apt install nmap\n"
-        exit
+	abortscript=1
+fi
+#Check if nikto is installed
+if [ "$(dpkg -l | awk '/nikto/ {print }'|wc -l)" = 0 ]; then
+        printf "\nnikto is not installed. Install on kali with:"
+        printf "\n\$ sudo apt install nikto\n"
+	abortscript=1
+fi
+#Check if gobuster is installed
+if [ "$(dpkg -l | awk '/gobuster/ {print }'|wc -l)" = 0 ]; then
+        printf "\ngobuster is not installed. Install on kali with:"
+        printf "\n\$ sudo apt install gobuster\n"
+	abortscript=1
+fi
+#check if ffuf is installed
+if [ "$(dpkg -l | awk '/ffuf/ {print }'|wc -l)" = 0 ]; then
+        printf "\nffuf is not installed. Install on kali with:"
+        printf "\n\$ sudo apt install ffuf\n"
+	abortscript=1
+fi
+#Check if seclists is installed
+if [ "$(dpkg -l | awk '/seclists/ {print }'|wc -l)" = 0 ]; then
+        printf "\nseclists is not installed. Install on kali with:"
+        printf "\n\$ sudo apt install seclists"
+	abortscript=1
+fi
+#If one of the tools is not installed, abort.
+if [ $abortscript = 1 ]; then
+	printf "\n\n----- Stopping -----\n\n"
+	exit
 fi
 
 # process command line arguments
@@ -55,27 +88,6 @@ printf "\n~ Running Nmap again with scripts ~ \n"
 nmap -p- -Pn -sC -sV -oN "$dir"/"$target"-nmap-defaultscripts "$target"
 printf "\n----- Nmap done -----\n"
 
-# verify if dirb and nikto and seclists are installed
-#Check if nikto is installed
-if [ "$(dpkg -l | awk '/nikto/ {print }'|wc -l)" = 0 ]; then
-        printf "\nnikto is not installed. Install on debian-like systems with:"
-        printf "\n\$ sudo apt install nikto\n"
-        exit
-fi
-#Check if dirb is installed
-if [ "$(dpkg -l | awk '/dirb/ {print }'|wc -l)" = 0 ]; then
-        printf "\ndirb is not installed. Install on debian-like systems with:"
-        printf "\n\$ sudo apt install dirb\n"
-        exit
-fi
-#Check if seclists is installed
-if [ "$(dpkg -l | awk '/seclists/ {print }'|wc -l)" = 0 ]; then
-        printf "\nseclists is not installed. Install on debian-like systems with:"
-        printf "\n\$ sudo apt install seclists"
-        printf "\nIf not, only the last part of enumeration wont work: finding directories on webpages using burp"
-	sleep 3s
-fi
-
 printf "\n\n----- Starting Web Enumeration -----\n\n"
 
 # identify http ports on the target system
@@ -108,34 +120,36 @@ for p in $httpslist; do
 	printf "~~  > done; results saved."
 done
 
-# run dirb non-recursive
+# run gobuster non-recursive
 for p in $httplist; do
 	printf "\n\n~~ Running dirb non-recursive for port $p .\n"
-	printf "\n~~ Using the default wordlist for dirb, with only about 4600 entries ...\n"
-	dirb http://"$target":"$p" -r -o $dir/"$target"-"$p"-dirb.txt
+	printf "\n~~ Using wordlist /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt with about 220k entries, so this may take a while ...\n"
+	gobuster dir -u http://"$target":"$p" -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -o $dir/"$target"-"$p"-gobuster.txt
 	printf "~~  > done; results saved."
+
 done
 for p in $httpslist; do
 	printf "\n\n~~ Running dirb non-recursive for port $p ...\n"
-	printf "\n~~ Using the default wordlist for dirb, with only about 4600 entries ...\n"
-	dirb https://"$target":"$p" -r -o $dir/"$target"-"$p"-dirb.txt
+	printf "\n~~ Using wordlist /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt with about 220k entries, so this may take a while ...\n"
+	gobuster dir -u https://"$target":"$p" -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -o $dir/"$target"-"$p"-gobuster.txt
 	printf "~~  > done; results saved."
 done
 
-# run dirb recursive
+# run ffuf recursive
 for p in $httplist; do
-	printf "\n\n~~ Running dirb recursive for port $p ...\n"
-	printf "\n~~ Using wordlist /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt with about 220k entries, so this may take a while ...\n"
-	dirb http://"$target":"$p" /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -o $dir/"$target"-"$p"-dirb-recursive.txt
+	printf "\n\n~~ Running gobuster for port $p ...\n"
+	printf "\n~~ Using wordlist /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt with about 88k entries.\n"
+	ffuf -u http://"$target":"$p"/FUZZ -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt -recursion -o $dir/"$target"-"$p"-ffuf-recursive.txt -of csv
 	printf "\n~~  > done; results saved."
 
 done
 for p in $httpslist; do
-	printf "\n\n~~ Running dirb recursive for port $p ...\n"
-	printf "\n~~ Using wordlist /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt with about 220k entries, so this may take a while ...\n"
-	dirb https://"$target":"$p" /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -o $dir/"$target"-"$p"-dirb-recursive.txt
+	printf "\n\n~~ Running FFUF recursive for port $p ...\n"
+	printf "\n~~ Using wordlist /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt with about 88k entries.\n"
+	ffuf -u https://"$target":"$p"/FUZZ -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt -recursion -o $dir/"$target"-"$p"-ffuf-recursive.txt -of csv
 	printf "~~  > done; results saved."
 done
 
 # End the script
 printf "\n\n----- Finished!  -----\n"
+
