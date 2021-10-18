@@ -122,13 +122,13 @@ done
 
 # run gobuster non-recursive
 for p in $httplist; do
-	printf "\n\n~~ Running dirb non-recursive for port $p .\n"
+	printf "\n\n~~ Running gobuster non-recursive for port $p .\n"
 	printf "\n~~ Using wordlist /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt with about 220k entries, so this may take a while ...\n"
 	gobuster dir -u http://"$target":"$p" -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -o $dir/"$target"-"$p"-gobuster.txt
 	printf "~~  > done; results saved."
 done
 for p in $httpslist; do
-	printf "\n\n~~ Running dirb non-recursive for port $p ...\n"
+	printf "\n\n~~ Running gobuster non-recursive for port $p ...\n"
 	printf "\n~~ Using wordlist /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt with about 220k entries, so this may take a while ...\n"
 	gobuster dir -u https://"$target":"$p" -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -o $dir/"$target"-"$p"-gobuster.txt
 	printf "~~  > done; results saved."
@@ -136,13 +136,13 @@ done
 
 # run dirb recursive
 for p in $httplist; do
-	printf "\n\n~~ Running gobuster for port $p ...\n"
+	printf "\n\n~~ Running dirb recursive for port $p ...\n"
 	printf "\n~~ Using default wordlist for dirb with about 4k entries.\n"
         dirb http://"$target":"$p" -o $dir/"$target"-"$p"-dirb-recursive.txt -w
 	printf "\n~~  > done; results saved."
 done
 for p in $httpslist; do
-	printf "\n\n~~ Running FFUF recursive for port $p ...\n"
+	printf "\n\n~~ Running dirb recursive for port $p ...\n"
 	printf "\n~~ Using default wordlist for dirb with about 4k entries.\n"
         dirb https://"$target":"$p" -o $dir/"$target"-"$p"-dirb-recursive.txt -w
 	printf "~~  > done; results saved."
