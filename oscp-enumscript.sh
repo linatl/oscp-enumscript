@@ -35,16 +35,16 @@ if [ "$(dpkg -l | awk '/gobuster/ {print }'|wc -l)" = 0 ]; then
         printf "\n\$ sudo apt install gobuster\n"
 	abortscript=1
 fi
-#check if ffuf is installed
-if [ "$(dpkg -l | awk '/ffuf/ {print }'|wc -l)" = 0 ]; then
-        printf "\nffuf is not installed. Install on kali with:"
-        printf "\n\$ sudo apt install ffuf\n"
+#check if dirb is installed
+if [ "$(dpkg -l | awk '/dirb/ {print }'|wc -l)" = 0 ]; then
+        printf "\ndirb is not installed. Install on kali with:"
+        printf "\n\$ sudo apt install dirb\n"
 	abortscript=1
 fi
 #Check if seclists is installed
 if [ "$(dpkg -l | awk '/seclists/ {print }'|wc -l)" = 0 ]; then
         printf "\nseclists is not installed. Install on kali with:"
-        printf "\n\$ sudo apt install seclists"
+        printf "\n\$ sudo apt install seclists\n"
 	abortscript=1
 fi
 #If one of the tools is not installed, abort.
@@ -126,7 +126,6 @@ for p in $httplist; do
 	printf "\n~~ Using wordlist /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt with about 220k entries, so this may take a while ...\n"
 	gobuster dir -u http://"$target":"$p" -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -o $dir/"$target"-"$p"-gobuster.txt
 	printf "~~  > done; results saved."
-
 done
 for p in $httpslist; do
 	printf "\n\n~~ Running dirb non-recursive for port $p ...\n"
@@ -135,18 +134,17 @@ for p in $httpslist; do
 	printf "~~  > done; results saved."
 done
 
-# run ffuf recursive
+# run dirb recursive
 for p in $httplist; do
 	printf "\n\n~~ Running gobuster for port $p ...\n"
-	printf "\n~~ Using wordlist /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt with about 88k entries.\n"
-	ffuf -u http://"$target":"$p"/FUZZ -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt -recursion -o $dir/"$target"-"$p"-ffuf-recursive.txt -of csv
+	printf "\n~~ Using default wordlist for dirb with about 4k entries.\n"
+        dirb http://"$target":"$p" -o $dir/"$target"-"$p"-dirb-recursive.txt -w
 	printf "\n~~  > done; results saved."
-
 done
 for p in $httpslist; do
 	printf "\n\n~~ Running FFUF recursive for port $p ...\n"
-	printf "\n~~ Using wordlist /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt with about 88k entries.\n"
-	ffuf -u https://"$target":"$p"/FUZZ -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt -recursion -o $dir/"$target"-"$p"-ffuf-recursive.txt -of csv
+	printf "\n~~ Using default wordlist for dirb with about 4k entries.\n"
+        dirb https://"$target":"$p" -o $dir/"$target"-"$p"-dirb-recursive.txt -w
 	printf "~~  > done; results saved."
 done
 
