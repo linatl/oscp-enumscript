@@ -6,7 +6,7 @@
 
 nmap --> for port scanning and scripting engine
 
-gobuster and ffuf --> for web directory busting
+gobuster and dirb --> for web directory busting
 
 seclists --> for wordlists
 
@@ -15,7 +15,7 @@ nikto --> for web enumeration
 
 Install tools with (on kali system):
 ```
-$ sudo apt install nmap nikto seclists gobuster ffuf 
+$ sudo apt install dirb gobuster nikto nmap seclists  
 ```
 
 
