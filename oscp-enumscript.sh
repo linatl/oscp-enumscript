@@ -130,7 +130,7 @@ done
 for p in $httpslist; do
 	printf "\n\n~~ Running gobuster non-recursive for port $p ...\n"
 	printf "\n~~ Using wordlist /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt with about 220k entries, so this may take a while ...\n"
-	gobuster dir -u https://"$target":"$p" -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -o $dir/"$target"-"$p"-gobuster.txt -b "400,404,500"
+	gobuster dir -u https://"$target":"$p" -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -o $dir/"$target"-"$p"-gobuster.txt -b "400,404,500" -k
 	printf "~~  > done; results saved."
 done
 
